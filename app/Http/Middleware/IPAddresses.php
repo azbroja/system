@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Http\Middleware\Redirect;
 use Closure;
 
 class IPAddresses
@@ -37,11 +36,11 @@ class IPAddresses
      */
     public function handle($request, Closure $next)
     {
-        foreach ($request->getClientIps() as $ip) {
-            if (!$this->isValidIp($ip)) {
-                return redirect()->away('https://www.google.pl');
-            }
-        }
+        // foreach ($request->getClientIps() as $ip) {
+        //     if (!$this->isValidIp($ip)) {
+        //         return redirect()->away('https://www.google.pl');
+        //     }
+        // }
 
         return $next($request);
     }
