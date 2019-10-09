@@ -12,7 +12,6 @@
 
                 <a href="{{ url('customer/invoice/create/'.$customer->id) }}"><button class="btn btn-primary">Dodaj Fakturę</button></a> <br>
 
-                <a href="{{ url('customer/invoice/pro_forma/create/'.$customer->id) }}"><button class="btn btn-dark">Dodaj Pro Forma</button></a> <br>
                 @endcan
 
                 </nav>
