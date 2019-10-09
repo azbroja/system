@@ -1,0 +1,297 @@
+body {
+    display: grid;
+    grid-template-columns: 220px 3fr;
+    grid-template-rows: 70px 1fr 1fr;
+    grid-template-areas: "logo main""menu content""menu content ""menu footer";
+    max-width: 100%;
+    min-height: 100vh;
+    font-size: 15px;
+    font-family: sans-serif;
+    margin: 0.5px auto;
+    grid-row-gap: 1px;
+}
+
+
+@import url('https://fonts.googleapis.com/css?family=Montserrat');
+
+.logo {
+    display: block;
+    padding: 18px;
+    grid area: logo;
+    color: white;
+    text-align: center;
+    /* background-color: #2e323a; */
+    background-color: lightgrey;
+    /* background-color: white; */
+    font-size: 20px;
+    font-family: 'Montserrat', sans-serif;
+
+
+}
+
+.errormsg {
+    font-weight: bold;
+    color: red;
+}
+
+.logo img {
+    height: 125%;
+
+}
+
+
+a {
+    text-decoration: none;
+}
+
+.list {
+    background-color: #fff;
+}
+
+header {
+
+    display: flex;
+    flex: 1;
+    margin: 0px;
+    padding: 10px;
+    grid-area: main;
+    background-color: #fff;
+}
+
+
+.nav-item {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    text-decoration: none;
+}
+
+.info__eventsToDo {
+    position: absolute;
+    right: 160px;
+    top: 20px;
+    flex-direction: row;
+}
+
+.info__eventsToDo span {
+    position: absolute;
+    right: 25px;
+    height: 10px;
+    width: 10px;
+    background-color: green;
+    border-radius: 50%;
+}
+
+eventstodonumbers {
+    font-size: 10px;
+    font-weight: bold;
+    position: absolute;
+    font-size: 12px;
+    color: green;
+    left: 0px;
+    top: 30px;
+}
+
+.info__oldEventsToDo {
+    position: absolute;
+    right: 120px;
+    top: 20px;
+    flex-direction: row;
+}
+
+.info__oldEventsToDo span {
+    position: absolute;
+    left: 25px;
+    height: 10px;
+    width: 10px;
+    background-color: red;
+    border-radius: 50%;
+}
+
+oldeventstodonumber {
+    position: absolute;
+    color: red;
+    font-size: 12px;
+    font-weight: bold;
+    top: 30px;
+    left: 0px;
+}
+
+.search {
+    flex: 1;
+    top: 20px;
+    padding: 18px;
+    border: none;
+}
+
+.fas {
+    border: none;
+    font-size: 17px;
+    background-color: transparent;
+
+
+}
+
+.search-input {
+    border: none;
+    font-size: 15px;
+
+}
+
+.sidebar {
+    grid-area: menu;
+    background-color: #2e323a;
+    color: grey;
+    font-size: 15px;
+}
+
+.sidebar a {
+    text-decoration: none;
+    padding: 5px 10px;
+    display: block;
+    color: white;
+}
+
+.sidebar a:hover {
+    background-color: rgba(255, 255, 255, .2);
+    color: white;
+
+}
+
+ul {
+    padding: 0px;
+}
+
+.sidebar a.active {
+    background-color: rgba(255, 255, 255, .4);
+    color: white;
+
+}
+
+.customer-menu {
+    grid-area: menu;
+    background-color: #2e323a;
+    color: grey;
+    font-size: 15px;
+    display: flex;
+}
+
+.customer-menu a {
+    text-decoration: none;
+    padding: 5px 10px;
+    color: white;
+}
+
+.customer-menu a:hover {
+    background-color: rgba(255, 255, 255, .2);
+    color: white;
+
+}
+
+.customer-menu a.active {
+    background-color: rgba(255, 255, 255, .4);
+    color: white;
+
+}
+
+
+content {
+    grid-area: content;
+    background-color: #f5f3f3;
+    padding: 10px;
+}
+
+
+footer {
+    grid-area: footer;
+    background-color: white;
+    color: black;
+    padding: 10px;
+    text-align: center;
+}
+
+.month-container {
+    margin: 10px;
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+.stat {
+    margin: 20px;
+    line-height: 25px;
+
+    box-sizing: border-box;
+    width: 25%;
+    float: left;
+    text-align: center;
+    border: 1px solid grey;
+    border-radius: 2px;
+    background-color: white;
+    height: 100px;
+    padding: 5px;
+
+}
+
+.stat span {
+    color: grey;
+    font-size: 15px;
+}
+
+.far {
+    font-size: 30px;
+}
+
+.h1 {}
+
+.list a {
+    float: center;
+    /* color: grey; */
+}
+
+.list a:hover {
+    color: black;
+}
+
+.search-results {
+    display: flex;
+    flex-direction: column;
+}
+
+.pagination,
+.page-item {
+    margin: 0px;
+    padding: 0px;
+}
+
+.page-item.active {
+    background-color: #2e323a;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    margin-top: 30px;
+}
+
+.page-link {
+    color: black;
+    float: center;
+    padding: 0px 6px;
+    text-decoration: none;
+}
+
+.page-item.active .page-link {
+    color: white;
+    background-color: #2e323a;
+}
+
+/*
+@media (max-width: 1024px) {
+  body {
+    grid-template-columns: 1fr;
+    grid-template-rows: 50px 300px 1fr 200px 50px;
+    grid-template-areas: "menu""baner""blog""column""stopka";
+
+  }
+} */

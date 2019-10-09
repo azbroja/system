@@ -1,0 +1,272 @@
+3) wrzucić wszystko tak jak jest ale spróbować później dopasować id
+
+
+#1) użytkownicy, trzeba dodać nullable
+    insert into homestead.`users`
+    select id_usr, usr_name, usr_surname, usr_email,'664 74 19 19', usr_psw, '', '2019-03-19', '2019-03-19' from new_base2.`users`
+
+#2)klienci *trzeba zmienić adres delivery na text plus nullable niektóre - PAMIETAJ O TYPIE ODBIORCA
+SELECT Replace(Replace(Replace(nip, ' ',''), '-', ''), '.','') FROM customers - ZAMIANA NIP
+
+
+    insert into homestead.`customers`
+    select id_kl, usr_id_usr, kl_nazwa, 'Odbiorca', kl_miasto, kl_kod_pocztowy, kl_ulica, kl_regon, kl_nip, '2019-01-01', '1', kl_telefon1, kl_telefon2, kl_fax, kl_email, kl_www, kl_uwagi, kl_sprzedane_produkty, kl_aktualny, '', kl_adres_dostawy, kl_ilosc_sprzetu, null, '2019-03-19', '2019-03-19' from new_base2.`lista_klientow`
+
+
+
+
+UPDATE customers
+SET
+   nip = (Replace(Replace(Replace(nip, ' ',''), '-', ''), '.',''))
+
+
+#3)osoby kontaktowe, trzeba dodać nullable
+    insert into homestead.`contact_people`
+    select @n := @n + 1 n, id_kl, kl_osk_imie, kl_osk_nazwisko, kl_osk_telefon1, kl_osk_telefon2, kl_osk_email, kl_osk_uwagi, '2019-03-19', '2019-03-19' from new_base2.`lista_klientow`, (SELECT @n := 0) m
+
+#4) produkty do magazynu
+    insert into homestead.`products`
+    select id_mag, mag_symb_d, mag_symb_p, is_gratis, mag_replacement, mag_sell, mag_producer_price, mag_buy, '23', '2019-03-19', '2019-03-19' from new_base2.magazyn
+
+#5 ??produkty customera moze, z ignore poniewaz nie chce pozwolic dopisac klucz obcy
+insert ignore into homestead.customer_product
+select kl_s_id_klienta, kl_s_id_sprzet, kl_s_cena, 0, kl_s_cena_skupu, NULL, NULL
+from new_base2.kl_stuff
+where id_kl_s in (
+	select max(kl_stuff.id_kl_s)
+	from new_base2.kl_stuff
+	join new_base2.lista_klientow
+	on lista_klientow.id_kl = kl_stuff.kl_s_id_klienta
+	join new_base2.magazyn
+	on magazyn.id_mag = kl_stuff.kl_s_id_sprzet
+	group by kl_stuff.kl_s_id_klienta, kl_stuff.kl_s_id_sprzet
+)
+
+#6)faktury, zmien date create na issued_at by sortowało DODAJ INCOMING NA 0 by nie liczył jako przychodzących
+sproboj obczaic gotowka i przelew z nowym nipem
+
+insert into homestead.`invoices`
+     select id_fvwz, usr_id_usr, id_kl, NULL, fv_num, NULL, fv_date_wyst, fv_date_sprz, fv_place, fv_paid, NULL, '0', (SELECT IF(fv_pay_type = "0", "transfer", "cash")), NULL,  fv_pay_deadline, fv_value_total, round(fv_value_total * 1.23, 2), fv_sp_dane, fv_na_dane, NULL,fv_na_dostawa, fv_comments, null, null, null, null, null, fv_date_sprz, fv_date_sprz from new_base2.`lista_klientow` left join new_base2.`fvwz` on `id_kl` = `fv_na_id` where new_base2.fvwz.fv_fv_type = 0
+
+
+#7) produkty do faktury PAMIĘTAJ O NAZWACH PRODUKTÓW są inne niż w magazynie niestety!!
+ insert into homestead.invoice_product
+    select fv_na_id, id_fvwz, fvwz_s_id_sprzet, fvwz_s_nazwa, null,fvwz_s_ilosc, fvwz_s_cena, (fvwz_s_cena*1.23)  from new_base2.fvwz_stuff
+    join new_base2.fvwz on fvwz_s_id_faktura = id_fvwz
+    join new_base2.magazyn on fvwz_s_id_sprzet = id_mag
+    where fv_fv_type = 0
+
+
+#8) oferty muszisz ustawić document_id i yearly_counter na nullable jak coś, jeste jeszcze problem bo u nas wchodzisz w usera poprzez document->user!!
+           insert into homestead.`offers`
+select id_fvwz, usr_id_usr, id_kl, fv_num, NULL, fv_date_wyst, fv_sp_dane, fv_na_dane, fv_date_wyst, fv_date_wyst from new_base2.`lista_klientow` left join new_base2.`fvwz` on `id_kl` = `fv_na_id` where new_base2.fvwz.fv_fv_type = 3
+
+#9) produkty do oferty pamietaj o nazwie oferty
+       insert ignore into homestead.offer_product
+ select fv_na_id, fvwz_s_id_sprzet, id_fvwz, fvwz_s_nazwa, fvwz_s_cena, '0', '0', '2019-03-19', '2019-03-19'
+    from new_base2.fvwz_stuff
+    join new_base2.fvwz on fvwz_s_id_faktura = id_fvwz
+    join new_base2.magazyn on fvwz_s_id_sprzet = id_mag
+    where fv_fv_type = 3
+
+#10) notatki
+insert into homestead.customer_events
+select id_notatki, kl_id_kl, usr_id_usr, not_data_wykonanie, 'email', '1', not_tresc, not_data_otwarcie, not_data_otwarcie from new_base2.notatki where not_status_notatka = 43
+
+zmieniamy na 0 i 44 dla planowanych
+
+UPDATE customer_events
+SET
+   priority = 0
+
+#11) komentarze do faktur
+insert ignore into homestead.invoice_comments
+select id_fvwz_stuff, id_fvwz, id_user, comment, created, created from new_base2.fvwz_comments
+
+
+#12)zlecenia zmien comments na text
+    insert into homestead.`orders`
+    select id_fvwz, usr_id_usr, id_kl, fv_num, NULL, fv_date_sprz, 'transfer', fv_comments, '7', '1', fv_date_sprz, fv_sp_dane, fv_na_dane, NULL,fv_na_dostawa, fv_comments, fv_date_sprz, fv_date_sprz from new_base2.`lista_klientow` left join new_base2.`fvwz` on `id_kl` = `fv_na_id` where new_base2.fvwz.fv_fv_type = 4
+
+14) produtky ofert, cena zakupu daj 0
+insert into homestead.order_product
+    select fv_na_id, id_fvwz, fvwz_s_id_sprzet, fvwz_s_nazwa, fvwz_s_ilosc, null, fvwz_s_cena, (fvwz_s_cena*1.23)  from new_base2.fvwz_stuff
+    join new_base2.fvwz on fvwz_s_id_faktura = id_fvwz
+    join new_base2.magazyn on fvwz_s_id_sprzet = id_mag
+    where fv_fv_type = 4
+
+
+    #15)reklamacje zmien comments na text
+    insert into homestead.`complaints`
+    select id_fvwz, usr_id_usr, id_kl, null, fv_num, NULL, fv_date_sprz, fv_date_sprz, fv_date_sprz, 'Kraków', '1', null, fv_sp_dane, fv_na_dane, NULL,fv_na_dostawa, fv_comments, null, fv_date_sprz, fv_date_sprz from new_base2.`lista_klientow` left join new_base2.`fvwz` on `id_kl` = `fv_na_id` where new_base2.fvwz.fv_fv_type = 5
+
+    #16) produtky reklamacji
+insert ignore into homestead.complaint_product
+select fv_na_id, id_fvwz, fvwz_s_id_sprzet, fvwz_s_ilosc, fvwz_s_cena, (fvwz_s_cena*1.23), fvwz_s_nazwa  from new_base2.fvwz_stuff
+    join new_base2.fvwz on fvwz_s_id_faktura = id_fvwz
+    join new_base2.magazyn on fvwz_s_id_sprzet = id_mag
+    where fv_fv_type = 5
+
+    #17 odpady PAMIETAJ O YEARLY COUNTER, RUBBISHES, INVOICES, ORDERS DOPISZ NUMER KONTA
+insert ignore into homestead.rubbishes
+select id_odpady, odp_id_prow, odp_id_pos, odp_num2, null, odp_data, 'Kraków', '1', 'KR9M759', odp_masa, odp_kod, 'Odpady tonerów do drukarek laserowych', CONCAT(new_base2.`lista_klientow`.kl_nazwa,'\n', new_base2.`lista_klientow`.kl_ulica,'\n', new_base2.`lista_klientow`.kl_kod_pocztowy,' ', new_base2.`lista_klientow`.kl_miasto), (select CONCAT(kl_nazwa,'\n', kl_ulica,'\n', kl_kod_pocztowy,' ', kl_miasto) from new_base2.`lista_klientow` where new_base2.lista_klientow.`id_kl` = 1), odp_komentarze, odp_data, odp_data from new_base2.odpady
+join new_base2.lista_klientow
+on lista_klientow.id_kl = odpady.odp_id_pos
+
+#18 rozmowy
+insert into work_hours
+select @n := @n + 1 n, id_user, floor(phone_counter*60), 8, 1, created, created, date from new_base2.users_to_workhours, (SELECT @n := 0) m
+
+
+#19 korekty
+recznie dodaj, zmienisz daty w bazie
+
+#20
+insert into homestead.`releases`
+     select id_fvwz, usr_id_usr, id_kl, NULL, fv_num, NULL, fv_date_wyst, fv_date_sprz, fv_place, fv_paid, fv_value_total, fv_sp_dane, fv_na_dane, NULL, fv_na_dostawa, fv_comments, fv_date_sprz, fv_date_sprz from new_base2.`lista_klientow` left join new_base2.`fvwz` on `id_kl` = `fv_na_id` where new_base2.fvwz.fv_fv_type = 1
+
+ZMIEN NUMERY!! CLEAR CUSTOMERS i FAKTURY
+
+1) nie wiem jak dodać pole by po wpisywaniu wyszukiwał i pojawiały się dane z bazy,
+teraz działa mi to tylko jako select czyli jeśli ma produkty mogę wybrać z listy i tyle
+3) nie wiem jak podpiąc to q by można było po wpisaniu je przekazać do api
+2) nie wiem jak podpiąć api by listowało produkty po tym co wpisujemy(poczytam o fetch api oczywiście)
+3) i na koniec jak to przekazać do kontolera(pewnie jako tablicę)
+
+
+
+
+
+    insert into homestead.`users`
+    select id_usr, usr_name, usr_surname, usr_email,'664 74 19 19', usr_psw, '', '2019-03-27', '2019-03-27' from new_base2.`users`
+
+
+    insert into homestead.`customers`
+    select id_kl, usr_id_usr, kl_nazwa, 'Odbiorca', kl_miasto, kl_kod_pocztowy, kl_ulica, kl_regon, kl_nip, '2019-01-01', '1', kl_telefon1, kl_telefon2, kl_fax, kl_email, kl_www, '', kl_sprzedane_produkty, kl_aktualny, '', kl_adres_dostawy, kl_ilosc_sprzetu, null, '2019-03-19', '2019-03-19' from new_base2.`lista_klientow`
+
+
+
+UPDATE customers
+SET
+   nip = (Replace(Replace(Replace(nip, ' ',''), '-', ''), '.',''))
+
+
+    insert into homestead.`contact_people`
+    select @n := @n + 1 n, id_kl, kl_osk_imie, kl_osk_nazwisko, kl_osk_telefon1, kl_osk_telefon2, kl_osk_email, kl_osk_uwagi, '2019-03-19', '2019-03-19' from new_base2.`lista_klientow`, (SELECT @n := 0) m
+
+    insert into homestead.`products`
+    select id_mag, mag_symb_d, mag_symb_p, is_gratis, mag_replacement, mag_sell, mag_producer_price, mag_buy, '23', '2019-03-19', '2019-03-19' from new_base2.magazyn
+
+insert ignore into homestead.customer_product
+select kl_s_id_klienta, kl_s_id_sprzet, kl_s_cena, 0, kl_s_cena_skupu, NULL, NULL
+from new_base2.kl_stuff
+where id_kl_s in (
+	select max(kl_stuff.id_kl_s)
+	from new_base2.kl_stuff
+	join new_base2.lista_klientow
+	on lista_klientow.id_kl = kl_stuff.kl_s_id_klienta
+	join new_base2.magazyn
+	on magazyn.id_mag = kl_stuff.kl_s_id_sprzet
+	group by kl_stuff.kl_s_id_klienta, kl_stuff.kl_s_id_sprzet
+)
+
+    insert into homestead.`invoices`
+     select id_fvwz, usr_id_usr, id_kl, NULL, fv_num, NULL, fv_date_wyst, fv_date_sprz, fv_place, fv_paid, NULL, '0', (SELECT IF(fv_pay_type = "0", "transfer", "cash")), NULL,  fv_pay_deadline, fv_value_total, round(fv_value_total * 1.23, 2), fv_sp_dane, fv_na_dane, NULL,fv_na_dostawa, fv_comments, null, null, null, null, null, fv_date_sprz, fv_date_sprz from new_base2.`lista_klientow` left join new_base2.`fvwz` on `id_kl` = `fv_na_id` where new_base2.fvwz.fv_fv_type = 0
+
+
+ insert into homestead.invoice_product
+    select fv_na_id, id_fvwz, fvwz_s_id_sprzet, fvwz_s_nazwa, null,fvwz_s_ilosc, fvwz_s_cena, (fvwz_s_cena*1.23)  from new_base2.fvwz_stuff
+    join new_base2.fvwz on fvwz_s_id_faktura = id_fvwz
+    join new_base2.magazyn on fvwz_s_id_sprzet = id_mag
+    where fv_fv_type = 0
+
+
+           insert into homestead.`offers`
+select id_fvwz, usr_id_usr, id_kl, fv_num, NULL, fv_date_wyst, fv_sp_dane, fv_na_dane, fv_date_wyst, fv_date_wyst from new_base2.`lista_klientow` left join new_base2.`fvwz` on `id_kl` = `fv_na_id` where new_base2.fvwz.fv_fv_type = 3
+
+       insert ignore into homestead.offer_product
+ select fv_na_id, fvwz_s_id_sprzet, id_fvwz, fvwz_s_nazwa, fvwz_s_cena, '0', '0', '2019-03-19', '2019-03-19'
+    from new_base2.fvwz_stuff
+    join new_base2.fvwz on fvwz_s_id_faktura = id_fvwz
+    join new_base2.magazyn on fvwz_s_id_sprzet = id_mag
+    where fv_fv_type = 3
+
+insert ignore into homestead.customer_events
+select id_notatki, kl_id_kl, usr_id_usr, not_data_wykonanie, 'email', '1', not_tresc, not_data_otwarcie, not_data_otwarcie from new_base2.notatki where not_status_notatka = 43
+
+insert into homestead.customer_events
+select id_notatki, kl_id_kl, usr_id_usr, not_data_wykonanie, 'email', '0', not_tresc, not_data_otwarcie, not_data_otwarcie from new_base2.notatki where not_status_notatka = 44
+
+
+
+insert ignore into homestead.invoice_comments
+select id_fvwz_stuff, id_fvwz, id_user, comment, created, created from new_base2.fvwz_comments
+
+
+    insert into homestead.`orders`
+    select id_fvwz, usr_id_usr, id_kl, fv_num, NULL, fv_date_sprz, 'transfer', fv_comments, '7', '1', fv_date_sprz, fv_sp_dane, fv_na_dane, NULL,fv_na_dostawa, fv_comments, fv_date_sprz, fv_date_sprz from new_base2.`lista_klientow` left join new_base2.`fvwz` on `id_kl` = `fv_na_id` where new_base2.fvwz.fv_fv_type = 4
+
+insert into homestead.order_product
+    select fv_na_id, id_fvwz, fvwz_s_id_sprzet, fvwz_s_nazwa, fvwz_s_ilosc, '0', fvwz_s_cena, (fvwz_s_cena*1.23)  from new_base2.fvwz_stuff
+    join new_base2.fvwz on fvwz_s_id_faktura = id_fvwz
+    join new_base2.magazyn on fvwz_s_id_sprzet = id_mag
+    where fv_fv_type = 4
+
+
+    insert into homestead.`complaints`
+    select id_fvwz, usr_id_usr, id_kl, null, fv_num, NULL, fv_date_sprz, fv_date_sprz, fv_date_sprz, 'Kraków', '1', null, fv_sp_dane, fv_na_dane, NULL,fv_na_dostawa, fv_comments, null, fv_date_sprz, fv_date_sprz from new_base2.`lista_klientow` left join new_base2.`fvwz` on `id_kl` = `fv_na_id` where new_base2.fvwz.fv_fv_type = 5
+
+insert ignore into homestead.complaint_product
+select fv_na_id, id_fvwz, fvwz_s_id_sprzet, fvwz_s_ilosc, fvwz_s_cena, (fvwz_s_cena*1.23), fvwz_s_nazwa  from new_base2.fvwz_stuff
+    join new_base2.fvwz on fvwz_s_id_faktura = id_fvwz
+    join new_base2.magazyn on fvwz_s_id_sprzet = id_mag
+    where fv_fv_type = 5
+
+insert ignore into homestead.rubbishes
+select id_odpady, odp_id_prow, odp_id_pos, odp_num2, null, odp_data, 'Kraków', '1', 'KR9M759', odp_masa, odp_kod, 'Odpady tonerów do drukarek laserowych', CONCAT(new_base2.`lista_klientow`.kl_nazwa,'\n', new_base2.`lista_klientow`.kl_ulica,'\n', new_base2.`lista_klientow`.kl_kod_pocztowy,' ', new_base2.`lista_klientow`.kl_miasto), (select CONCAT(kl_nazwa,'\n', kl_ulica,'\n', kl_kod_pocztowy,' ', kl_miasto) from new_base2.`lista_klientow` where new_base2.lista_klientow.`id_kl` = 1), odp_komentarze, odp_data, odp_data from new_base2.odpady
+join new_base2.lista_klientow
+on lista_klientow.id_kl = odpady.odp_id_pos
+
+insert into work_hours
+select @n := @n + 1 n, id_user, floor(phone_counter*60), 8, 1, created, created, date from new_base2.users_to_workhours, (SELECT @n := 0) m
+
+
+    insert into homestead.`releases`
+     select id_fvwz, usr_id_usr, id_kl, NULL, fv_num, NULL, fv_date_wyst, fv_date_sprz, fv_place, fv_paid, fv_value_total, fv_sp_dane, fv_na_dane, NULL, fv_na_dostawa, fv_comments, fv_date_sprz, fv_date_sprz from new_base2.`lista_klientow` left join new_base2.`fvwz` on `id_kl` = `fv_na_id` where new_base2.fvwz.fv_fv_type = 1
+
+
+    select fv_na_id, id_fvwz, fvwz_s_id_sprzet, fvwz_s_nazwa, fvwz_s_ilosc, fvwz_s_cena, (fvwz_s_cena*1.23)  from new_base2.fvwz_stuff
+    join new_base2.fvwz on fvwz_s_id_faktura = id_fvwz
+    join new_base2.magazyn on fvwz_s_id_sprzet = id_mag
+    where fv_fv_type = 1
+
+
+przepisanie klientow na uzytkownika
+
+UPDATE customers
+SET
+   user_id = 14
+   where user_id = 6
+
+   przepisanie not_data_wykonanie
+
+UPDATE customer_events
+SET
+   user_id = 14
+   where is_completed = 0 and user_id = 6
+
+
+
+select product_name, sum(quantity) as quantity from invoice_product
+join invoices on invoices.id = invoice_product.invoice_id
+join products on products.id = invoice_product.product_id
+ where invoices.issued_at = '2019-05-16'
+ and products.`made_by_us` = 1
+ group by product_name
+
+
+select * from invoice_product
+join invoices on invoices.id = invoice_product.invoice_id
+join products on products.id = invoice_product.product_id
+ where invoices.issued_at = '2019-05-17'
+ and products.`made_by_us` = 1

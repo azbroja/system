@@ -1,0 +1,30 @@
+body {
+	background: #FF8;
+}
+
+li {
+	color: black;
+	text-decoration: none;
+}
+
+li:first-child {
+	color: red;
+}
+li:last-child {
+	color: pink;
+}
+
+li:hover {
+		text-decoration: underline;
+}
+
+.test {
+	color: green;
+	font-size: 30px;
+}
+
+#secondFive {
+	color: white;
+		font-size: 50px;
+
+}
