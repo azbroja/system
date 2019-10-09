@@ -20,11 +20,7 @@ class IPAddresses
      *
      * @var array
      */
-    protected $ips = [
-        '31.61.112.168',
-        '31.186.198.46',
-        '31.0.243.94',
-        '192.168.10.1'];
+    protected $ips = [];
 
     /**
      * List of valid IP-ranges.
