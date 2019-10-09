@@ -20,13 +20,8 @@ Nazwisko: {{ $user->surname }}               </div>
 <div>
 E-mail: {{ $user->email }}               </div>
 <div>
-Badania okresowe ważne do: <strong>{{ $user->period_tests }}      </strong>         </div>
-<div>
-<div>
-Pozostała ilość dni urlopu do wykorzystania: <strong>{{ $user->dayoff_counter }}      </strong>         </div>
-<div>
 
-</div>            </div>
+            </div>
 
         </div>
     </div>
