@@ -518,7 +518,7 @@ Route::post('/customer/invoice/create/{customer}', function (Request $request, C
     $user = User::findOrFail($newInvoice->user_id);
     $user->notify((new InvoiceMade($newInvoice))->delay($when));
 
-    return ['url' => route('invoice-view', ['id' => $newInvoice->id, 'download' => true])];
+    return $newInvoice->products()->sync($pivotData);
 
 });
 
