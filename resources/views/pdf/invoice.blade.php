@@ -46,7 +46,7 @@ Numer {{ $seller->bdo_number }}
       </tr></table>
      <br><br>
 
-      <table width='100%'><tr>
+     <table width='100%'><tr>
       <td><p class='gray'>Sprzedawca:</p></td><td></td><td>
 @if ($invoice->buyer_address_recipient == NULL)
         <p class='gray'>Nabywca:</p></td></tr><tr>
@@ -64,12 +64,13 @@ Numer {{ $seller->bdo_number }}
    <p class='gray'>Nabywca:</p></td></tr><tr>
           <td valign='top' width='47%'>{!! str_replace("\n", "<br/>", ($invoice->seller_address)) !!}<hr></td>
           <td></td>
-          <td valign='top' width='47%'>
-          {{ $invoice->buyer_address_name }}<br>
-          {{ $invoice->buyer_address_address }}<br>
-          {{ $invoice->buyer_address_postal_code }}
-          {{ $invoice->buyer_address_city }}<br>
-          {{ $invoice->buyer_address_nip ? 'NIP: '.$invoice->buyer_address_company_nip : ' '}}
+          <td valign='top' width='47%'>          {{ $invoice->buyer_address__name }}<br>
+          {{ $invoice->buyer_address__address }}<br>
+          {{ $invoice->buyer_address__postal_code }}
+          {{ $invoice->buyer_address__city }}<br>
+          {{ $invoice->buyer_address__nip ? 'NIP: '.$invoice->buyer_address__nip : ' '}}<hr>
+
+
 
           <hr>
             <p class='gray'>Odbiorca:</p>

@@ -105,7 +105,7 @@ Lista Faktur
                 @endif
 
                 @can('create_customers')
-
+                 <a href="{{ url('generate-pdf/'.$invoice->id) }}" class="btn btn-danger">PDF</a>
 
 </td>
 <td>  {{ $invoice->net_value }} </a> </td>

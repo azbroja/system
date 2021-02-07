@@ -508,15 +508,15 @@ Route::post('/customer/invoice/create/{customer}', function (Request $request, C
     $newInvoice->total_value = $newInvoice->total_sum_gross();
     $newInvoice->update();
 
-    if ($yearly_counter === 1) {
-        $when = now()->addSeconds(10);
-        $user = User::findOrFail(5);
-        $user->notify((new InvoiceMade($newInvoice))->delay($when));
-    };
+    // if ($yearly_counter === 1) {
+    //     $when = now()->addSeconds(10);
+    //     $user = User::findOrFail(5);
+    //     $user->notify((new InvoiceMade($newInvoice))->delay($when));
+    // };
 
-    $when = now()->addSeconds(10);
-    $user = User::findOrFail($newInvoice->user_id);
-    $user->notify((new InvoiceMade($newInvoice))->delay($when));
+    // $when = now()->addSeconds(10);
+    // $user = User::findOrFail($newInvoice->user_id);
+    // $user->notify((new InvoiceMade($newInvoice))->delay($when));
 
     return $newInvoice->products()->sync($pivotData);
 

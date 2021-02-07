@@ -170,7 +170,7 @@ if (!function_exists('amount_pl')) {
 
   function amount_pl($value, $with_currency = false) {
 
-    return money_format('%'.($with_currency ? '' : '!').'n', $value);
+    return @money_format('%'.($with_currency ? '' : '!').'n', $value);
 
 
   }
